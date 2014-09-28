@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -33,14 +34,14 @@ func main() {
 		resp, err := http.Get(remoteImoutoUrl)
 		if err != nil {
 			log.Errorf("getting imouto hosts file fail! %v", err)
-			os.Exit(1)
+			readyToExit(false)
 		}
 		defer resp.Body.Close()
 		var body []byte
 		body, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Errorf("getting imouto hosts content from %v fail! %v", remoteImoutoUrl, err)
-			os.Exit(1)
+			readyToExit(false)
 		}
 		log.Infof("Got imouto hosts file from: %v", remoteImoutoUrl)
 
@@ -48,7 +49,7 @@ func main() {
 		hostsContent, err := ioutil.ReadFile(hostsPath)
 		if err != nil {
 			log.Errorf("reading hosts file fail!  %v", err)
-			os.Exit(1)
+			readyToExit(false)
 		}
 		log.Info("Read hosts file content.")
 
@@ -60,7 +61,7 @@ func main() {
 			err = ioutil.WriteFile(hostsBase, baseContent, 0666)
 			if err != nil {
 				log.Errorf("Cannot write hosts base file. %v", err)
-				os.Exit(1)
+				readyToExit(false)
 			}
 			log.Info("hosts base file is caeated it.")
 
@@ -68,7 +69,7 @@ func main() {
 			baseContent, err = ioutil.ReadFile(hostsBase)
 			if err != nil {
 				log.Errorf("Cannot read hosts base file. %v", err)
-				os.Exit(1)
+				readyToExit(false)
 			}
 			log.Info("Got hosts base file content.")
 
@@ -80,7 +81,7 @@ func main() {
 			err = ioutil.WriteFile(imoutoLocal, body, 0666)
 			if err != nil {
 				log.Errorf("Cannot write local imouto file. %v", err)
-				os.Exit(1)
+				readyToExit(false)
 			}
 			log.Info("local imouto file created.")
 
@@ -91,7 +92,7 @@ func main() {
 			currentContent, err = ioutil.ReadFile(imoutoLocal)
 			if err != nil {
 				log.Errorf("reading imouto hosts file fail! Exit program. %v", err)
-				os.Exit(1)
+				readyToExit(false)
 			}
 			log.Info("Got local imouto file content.")
 
@@ -99,14 +100,14 @@ func main() {
 			isEq := sliceEq(body, currentContent)
 			if isEq {
 				log.Info("no new version found. Exit.")
-				os.Exit(0)
+				readyToExit(true)
 			} else {
 				log.Info("new version of imouto found. writing to local imouto file...")
 
 				err = ioutil.WriteFile(imoutoLocal, body, 0666)
 				if err != nil {
 					log.Errorf("Cannot write local imouto file. %v", err)
-					os.Exit(1)
+					readyToExit(false)
 				}
 				log.Info("local imouto updated to new version.")
 
@@ -117,7 +118,7 @@ func main() {
 		err = ioutil.WriteFile(hostsBKPath, hostsContent, 0666)
 		if err != nil {
 			log.Errorf("Cannot write hosts bk file. %v", err)
-			os.Exit(1)
+			readyToExit(false)
 		}
 		log.Info("Backup current hosts file finish.")
 
@@ -125,12 +126,12 @@ func main() {
 		/*_, err = hostsFile.Write(baseContent)
 		if err != nil {
 			log.Errorf("Cannot write  base content to hosts file. %v", err)
-			os.Exit(1)
+			readyToExit(false)
 		}*/
 		/*err = ioutil.WriteFile(hostsPath, baseContent, 0644)
 		if err != nil {
 			log.Errorf("Cannot write hosts file with base content. %v", err)
-			os.Exit(1)
+			readyToExit(false)
 		}
 		log.Info("Writed to hosts file with base content.")*/
 
@@ -139,7 +140,7 @@ func main() {
 		hostsFile, err = os.OpenFile(hostsPath, os.O_APPEND, 0644)
 		if err != nil {
 			log.Errorf("Cannot open hosts file. %v", err)
-			os.Exit(1)
+			readyToExit(false)
 		}
 		hostsFile.Close()
 		log.Info("Open hosts file with appand model successful.")
@@ -147,20 +148,32 @@ func main() {
 		_, err = hostsFile.Write(body)
 		if err != nil {
 			log.Errorf("Cannot appand imouto content to hosts file. %v", err)
-			os.Exit(1)
+			readyToExit(false)
 		}*/
 		fullBody := concat(baseContent, body)
 		err = ioutil.WriteFile(hostsPath, fullBody, 0644)
 		if err != nil {
 			log.Errorf("Cannot write hosts file with base content. %v", err)
-			os.Exit(1)
+			readyToExit(false)
 		}
-		log.Info("Appended new version of imouto hosts content to hosts file. Finish all.")
+		log.Info("Update new version of imouto hosts content to hosts file.")
+		readyToExit(true)
 
 	} else {
 		log.Error("hosts file(%v) is not exists or cannot access! %v", hostsPath, err)
+		readyToExit(false)
 	}
 
+}
+
+func readyToExit(noErr bool) {
+	log.Info("Press *ENTER* to exit.")
+	bufio.NewReader(os.Stdin).ReadBytes('\n')
+	if noErr {
+		os.Exit(0)
+	} else {
+		os.Exit(1)
+	}
 }
 
 func sliceEq(a, b []byte) bool {
