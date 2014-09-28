@@ -100,7 +100,8 @@ func main() {
 			isEq := sliceEq(body, currentContent)
 			if isEq {
 				log.Info("no new version found. Exit.")
-				readyToExit(true)
+				os.Exit(0)
+				//readyToExit(true)
 			} else {
 				log.Info("new version of imouto found. writing to local imouto file...")
 
@@ -167,7 +168,7 @@ func main() {
 }
 
 func readyToExit(noErr bool) {
-	log.Info("Press *ENTER* to exit.")
+	log.Info("Press ** ENTER ** to exit.")
 	bufio.NewReader(os.Stdin).ReadBytes('\n')
 	if noErr {
 		os.Exit(0)
