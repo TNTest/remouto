@@ -157,7 +157,7 @@ func main() {
 			readyToExit(false)
 		}
 		log.Info("Update new version of imouto hosts content to hosts file.")
-		readyToExit(true)
+		//readyToExit(true)
 
 	} else {
 		log.Error("hosts file(%v) is not exists or cannot access! %v", hostsPath, err)
