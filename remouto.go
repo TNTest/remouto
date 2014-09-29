@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 
 	log "github.com/TNTest/logrus"
 )
@@ -151,7 +153,12 @@ func main() {
 			log.Errorf("Cannot appand imouto content to hosts file. %v", err)
 			readyToExit(false)
 		}*/
-		fullBody := concat(baseContent, body)
+		bodyDisableAdBlock, err := readAndDisableAdBlock(imoutoLocal)
+		if err != nil {
+			log.Errorf("Cannot disable ad block. %v", err)
+			readyToExit(false)
+		}
+		fullBody := concat(baseContent, bodyDisableAdBlock)
 		err = ioutil.WriteFile(hostsPath, fullBody, 0644)
 		if err != nil {
 			log.Errorf("Cannot write hosts file with base content. %v", err)
@@ -196,4 +203,39 @@ func concat(head, tail []byte) []byte {
 	copy(c[:len(head)], head)
 	copy(c[len(head):], tail)
 	return c
+}
+
+func readAndDisableAdBlock(filename string) ([]byte, error) {
+	var handled []byte
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Errorf("open file %v fail! %v", filename, err)
+		return handled, err
+	}
+	defer f.Close()
+
+	r := bufio.NewReaderSize(f, 8*1024)
+	line, isPrefix, err := r.ReadLine()
+	for err == nil {
+		if isPrefix {
+			log.Warn("Buffer size is small!")
+			//return handled, err
+		}
+		index := strings.Index(string(line), "127.0.0.1")
+		if index == 0 {
+			handled = append(handled, '#')
+		}
+		handled = append(handled, line...)
+		handled = append(handled, '\n')
+		line, isPrefix, err = r.ReadLine()
+	}
+	if err != nil && err != io.EOF {
+		log.Errorf("reading lines fail！%v", err)
+		return handled, err
+	}
+	log.Info("Successfully removed ad block.")
+	if err == io.EOF {
+		err = nil
+	}
+	return handled, err
 }

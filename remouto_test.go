@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"testing"
 )
 
@@ -15,4 +16,12 @@ func TestConcat(t *testing.T) {
 	if !bytes.Equal(c, d) {
 		t.Fail()
 	}
+}
+
+func TestReadAndDisableAdBlock(t *testing.T) {
+	content, err := readAndDisableAdBlock("/etc/hosts")
+	if err != nil && err != io.EOF {
+		t.Error(err)
+	}
+	fmt.Println(string(content))
 }
