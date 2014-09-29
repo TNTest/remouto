@@ -31,7 +31,7 @@ func main() {
 		log.Infof("Found hosts file: %v", hostsPath)
 
 		//get remote imouto hosts file
-		remoteImoutoUrl := "https://raw.githubusercontent.com/phoenixlzx/imouto.host/master/imouto.host.txt"
+		remoteImoutoUrl := "https://raw.githubusercontent.com/TNTest/imouto.host/master/imouto.host.txt"
 		log.Infof("Begin to fetch imouto hosts from: %v", remoteImoutoUrl)
 		resp, err := http.Get(remoteImoutoUrl)
 		if err != nil {
