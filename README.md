@@ -1,7 +1,5 @@
-remouto
+remouto  --imouto hosts 配置工具。
 =======
-
-imouto hosts 配置工具。
 
 ### 文件说明
 - 与hosts 同目录的 hosts.bk是修改前的备份文件； 
